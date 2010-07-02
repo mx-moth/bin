@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ $# -lt 1 ] ; then
+	echo "Usage: $0 package.name.ClassName [arguments]"
+	exit
+fi
+
+command='java'
+class=$1
+
+shift
+
+path="./"
+
+rm -R "${path}bin"
+mkdir "${path}bin"
+javac -d "${path}bin" -cp "${path}src" `find ${path}src -name '*.java'` && $command -cp "${path}bin" $class $@

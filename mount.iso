@@ -1,0 +1,27 @@
+#!/bin/bash
+
+file=`readlink -f "$1"`
+if [[ ! -e "$file" ]] ; then
+	echo "File $file does not exist!"
+	exit
+fi
+
+vol_id=`isoinfo -d -i "$file" | grep 'Volume id:' | cut -d' ' -f 3-`
+if [[ -z "$vol_id" ]] ; then
+	vol_id=`basename "$file" | sed s/.iso$//`
+fi
+
+mount=/media/$vol_id
+i=0
+while [[ -e "$mount" ]] ; do
+	mount=/media/$vol_id.$i
+	i=$(( $i + 1 ))
+done
+
+echo "Mounting $file at $mount"
+
+mkdir "$mount"
+chown $USER "$mount"
+chgrp nogroup "$mount"
+mount -t iso9660 -o loop,ro,uid=$USER,gid=nogroup,uhelper=hal,nodev,nosuid "$file" "$mount"
+#/dev/sdb1 /media/LICENCES vfat rw,nosuid,nodev,uhelper=hal,uid=1000,utf8,shortname=mixed,flush 0 0

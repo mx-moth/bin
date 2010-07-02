@@ -1,0 +1,37 @@
+#!/bin/bash
+
+addr1=
+addr2=
+case $# in
+	1)
+		addr1=$1
+		addr2=$1
+		;;
+	2)
+		addr1=$1
+		addr2=$2
+		;;
+	*)
+		echo "Usage: $0 address1 [address2]"
+		exit
+		;;
+esac
+
+i=120
+for (( o1=`echo $addr1 | cut -d"." -f 1` ; $o1 <= `echo $addr2 | cut -d"." -f 1` ; o1=$o1+1 )) ; do
+	for (( o2=`echo $addr1 | cut -d"." -f 2` ; $o2 <= `echo $addr2 | cut -d"." -f 2` ; o2=$o2+1 )) ; do
+		for (( o3=`echo $addr1 | cut -d"." -f 3` ; $o3 <= `echo $addr2 | cut -d"." -f 3` ; o3=$o3+1 )) ; do
+			for (( o4=`echo $addr1 | cut -d"." -f 4` ; $o4 <= `echo $addr2 | cut -d"." -f 4` ; o4=$o4+1 )) ; do
+				address=$o1.$o2.$o3.$o4
+				(ping -i 0.25 -c 4 -w 1 $address | grep -P "^\d+ bytes" | grep -v "Destination Host Unreachable" | cut -d":" -f 1 | cut -d" " -f 4 >> $$) &
+			done
+		done
+	done
+done
+
+sleep 1
+
+if [ -r $$ ] ; then
+	sort -u $$ 
+	rm $$
+fi

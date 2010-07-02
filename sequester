@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if `nohup $@ &>/dev/null < /dev/null &` ; then
+	exit 0
+else
+	echo "Failed"
+fi

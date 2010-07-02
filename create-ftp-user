@@ -1,0 +1,27 @@
+#!/bin/bash 
+
+if [[ $# -lt 2 ]] ; then
+	echo "Usage: $0 <user> <password>"
+	exit
+fi
+
+if [[ $UID -ne 0 ]] ; then
+	echo "Must be root to run this. Requesting sudo..."
+	sudo $0 $@ || echo "Failed to create ftp account"
+	exit
+fi
+
+name=$1
+pass=$2
+
+home=/var/ftp/$name
+
+useradd --home $home --shell /bin/false --no-create-home --gid www-data $name && \
+echo "$name:$pass" | chpasswd && \
+mkdir $home && \
+chown -R $name:www-data $home && \
+chmod -R 2664 $home && \
+chmod -R a+X $home && \
+echo -n '' || echo 'Failed to create ftp account'
+
+exit $?

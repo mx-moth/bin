@@ -1,0 +1,17 @@
+#!/bin/bash
+
+COMMAND=`basename "$0"`
+if [[ $# -lt 1 ]] ; then
+	echo "Usage: $COMMAND name [path]"
+	exit
+fi
+
+name=$1
+path=`pwd`
+
+if [[ $# -ge 2 ]] ; then
+	path=$2
+fi
+
+echo "$path" > ~/.shells/links/$name
+echo "Reload your bash shell or source your .bashrc to get the function"
