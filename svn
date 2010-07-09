@@ -1,0 +1,22 @@
+#!/bin/bash
+
+svn='/usr/bin/svn'
+
+if [[ $# -eq 0 ]] ; then
+	$svn
+else
+	case $1 in
+		diff) $svn $@ | colordiff | less ;;
+		log) 
+			out=`$svn $@`
+			out=`echo "$out" | sed "s/^-\{70,\}$/[33m\\0[0m/;"`
+			echo "$out" | less
+			;;
+		status) 
+			out=`$svn $@`
+			out=`echo "$out" | sed "s/^M.*$/[32m\\0[0m/;  s/^A.*$/[1m\\0[0m/;  s/^\?.*$/[36m\\0[0m/;  s/^D.*$/[31m\\0[0m/;"`
+			echo "$out" | less
+			;;
+		*) $svn $@ ;;
+	esac
+fi
