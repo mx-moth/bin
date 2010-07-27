@@ -2,21 +2,33 @@
 
 svn='/usr/bin/svn'
 
+log_pattern="/^-{72}$/{N;s/-+\\nr([0-9]+) \| ([-a-zA-Z0-9_.]+) \| [-0-9]+ ([0-9: +]+) \\(([-A-Za-z0-9 ,]+)\\) \| [0-9]+ lines?/\n[33m ---------- revision \\1 ---------- [0m\nAuthor: \\2\nDate:   \\4 \\3/}"
+update_pattern="
+	s/^U .*$/[32m\\0[0m/;
+	s/^A .*$/[1;32m\\0[0m/;
+	s/^G .*$/[36m\\0[0m/;
+	s/^[CE] .*$/[41;1m\\0[0m/;
+	s/^D .*$/[31m\\0[0m/;"
+file_pattern="
+	s/^\?.*$/[36m\\0[0m/;
+	s/^ \?M.*$/[32m\\0[0m/;
+	s/^A.*$/[1;32m\\0[0m/;
+	s/^I.*$/[9m\\0[0m/;
+	s/^[C!~].*$/[41;1m\\0[0m/;
+	s/^ C.*$/[41;1m\\0[0m/;
+	s/^D.*$/[31m\\0[0m/;"
+
 if [[ $# -eq 0 ]] ; then
 	$svn
 else
 	case $1 in
 		diff) $svn $@ | colordiff | less ;;
-		log) 
-			out=`$svn $@`
-			out=`echo "$out" | sed "s/^-\{70,\}$/[33m\\0[0m/;"`
-			echo "$out" | less
-			;;
-		status) 
-			out=`$svn $@`
-			out=`echo "$out" | sed "s/^M.*$/[32m\\0[0m/;  s/^A.*$/[1m\\0[0m/;  s/^\?.*$/[36m\\0[0m/;  s/^D.*$/[31m\\0[0m/;"`
-			echo "$out" | less
-			;;
+		log) $svn $@ | sed -r "$log_pattern" | pager ;;
+		up|update) $svn $@ | sed "$update_pattern" | pager ;;
+		st|stat|status) $svn $@ | sed "$file_pattern" | pager ;;
+
+		# Adding/moving/deleting files. These dont need a pager
+		rm|remove|del|delete|add|mv|move|rename|ren|mkdir) $svn $@ | sed "$file_pattern" ;;
 		*) $svn $@ ;;
 	esac
 fi
