@@ -17,6 +17,7 @@ file_pattern="
 	s/^[C!~].*$/[41;1m\\0[0m/;
 	s/^ C.*$/[41;1m\\0[0m/;
 	s/^D.*$/[31m\\0[0m/;"
+blame_pattern="s/(^\s*\d+)(\s+[-a-zA-Z0-9_.]+)/[1m\\1[0;33m\\2[0m/"
 
 if [[ $# -eq 0 ]] ; then
 	$svn
@@ -29,6 +30,9 @@ else
 
 		# Adding/moving/deleting files. These dont need a pager
 		rm|remove|del|delete|add|mv|move|rename|ren|mkdir) $svn $@ | sed "$file_pattern" ;;
+
+		# blame
+		blame) $svn blame $@ | sed "$blame_pattern" | pager ;;
 		*) $svn $@ ;;
 	esac
 fi
