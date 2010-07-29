@@ -21,14 +21,19 @@ file_pattern="
 if [[ $# -eq 0 ]] ; then
 	$svn
 else
-	case $1 in
-		diff) $svn $@ | colordiff | less ;;
-		log) $svn $@ | sed -r "$log_pattern" | pager ;;
-		up|update) $svn $@ | sed "$update_pattern" | pager ;;
-		st|stat|status) $svn $@ | sed "$file_pattern" | pager ;;
+
+	# Get the SVN command used
+	command=$1
+	shift
+
+	case $command in
+		diff) $svn diff $@ | colordiff | less ;;
+		log) $svn log $@ | sed -r "$log_pattern" | pager ;;
+		up|update) $svn update --accept postpone $@ | sed "$update_pattern" | pager ;;
+		st|stat|status) $svn status $@ | sed "$file_pattern" | pager ;;
 
 		# Adding/moving/deleting files. These dont need a pager
-		rm|remove|del|delete|add|mv|move|rename|ren|mkdir) $svn $@ | sed "$file_pattern" ;;
-		*) $svn $@ ;;
+		rm|remove|del|delete|add|mv|move|rename|ren|mkdir) $svn $command $@ | sed "$file_pattern" ;;
+		*) $svn $command $@ ;;
 	esac
 fi
