@@ -46,7 +46,11 @@ case "${operation}" in
 		svn status "$@"
 	;;
 	"log")
-		${SVN} ${operation} "$@"|sed -e 's/^-\+$/[1;32m\0[m/' -e 's/^r[0-9]\+.\+$/[1;31m\0[m/'
+		${SVN} ${operation} "$@"|sed -e 's/^-\+$/[33m\0[m/' -e 's/^r\([0-9]\+\) | \([^|]\+\) | \([^|]\+\) | \(.\+\)$/[33m'\
+'Revision: \1\n'\
+'Author:   \2\n'\
+'Time:     \3\n'\
+'Changed:  \4[m/'
 	;;
 	"blame"|"praise"|"annotate"|"ann")
 		${SVN} ${operation} "$@"|sed -e 's/^\(\s*[0-9]\+\s*\)\([^ ]\+\s*\)\(.*\)$/[1;32m\1[m[1;31m\2[m\3/'
