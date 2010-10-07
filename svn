@@ -1,38 +1,61 @@
 #!/bin/bash
+# Simple svn enhancement function
+# Read more about it at: http://westhoffswelt.de
 
-svn='/usr/bin/svn'
+SVN="/usr/bin/svn"
 
-log_pattern="/^-{72}$/{N;s/-+\\nr([0-9]+) \| ([-a-zA-Z0-9_.]+) \| [-0-9]+ ([0-9: +]+) \\(([-A-Za-z0-9 ,]+)\\) \| [0-9]+ lines?/\n[33m ---------- revision \\1 ---------- [0m\nAuthor: \\2\nDate:   \\4 \\3/}"
-update_pattern="
-	s/^U .*$/[32m\\0[0m/;
-	s/^A .*$/[1;32m\\0[0m/;
-	s/^G .*$/[36m\\0[0m/;
-	s/^[CE] .*$/[41;1m\\0[0m/;
-	s/^D .*$/[31m\\0[0m/;"
-file_pattern="
-	s/^\?.*$/[36m\\0[0m/;
-	s/^ \?M.*$/[32m\\0[0m/;
-	s/^A.*$/[1;32m\\0[0m/;
-	s/^I.*$/[9m\\0[0m/;
-	s/^[C!~].*$/[41;1m\\0[0m/;
-	s/^ C.*$/[41;1m\\0[0m/;
-	s/^D.*$/[31m\\0[0m/;"
-blame_pattern="s/(^\s*\d+)(\s+[-a-zA-Z0-9_.]+)/[1m\\1[0;33m\\2[0m/"
+operation=$1
+shift
 
-if [[ $# -eq 0 ]] ; then
-	$svn
-else
-	case $1 in
-		diff) $svn $@ | colordiff | less ;;
-		log) $svn $@ | sed -r "$log_pattern" | pager ;;
-		up|update) $svn $@ | sed "$update_pattern" | pager ;;
-		st|stat|status) $svn $@ | sed "$file_pattern" | pager ;;
+case "${operation}" in
+	"status"|"stat"|"st")
+		# My thanks for this snippet go to Kore Nordmann
+		# (http://kore-nordmann.de)
+		${SVN} ${operation} --ignore-externals "$@" | grep -v '^X' | sed -e 's/^ *[?].*$/[1;34m\0[m/' -e 's/^ *!.*$/[1;31m\0[m/' -e 's/^ *A.*$/[1;32m\0[m/' -e 's/^ *M.*$/[0;32m\0[m/' -e 's/^ *D.*$/[0;31m\0[m/' -e 's/^ *C.*$/[0;41m\0[m/'
+	;;
+	"diff"|"di")
+		# The colordiff utility (http://colordiff.sourceforge.net) is
+		# needed for this enhancement to work
+		# Thanks to Lukas Kahwe Smith for the addition to
+		# leave out whitespace changes
+		# Thanks to Robin Speekenbrink for the hint to the -R
+		# switch of less, which should fix problems some of
+		# you might have with colorization.
+		${SVN} ${operation} "$@" --diff-cmd `which diff` -x "-u -w"|colordiff|pager
+	;;
+	"update"|"up")
+		# This snippet is taken from a blog post found on the net. My
+		# thanks go out to the author of it.
+		# http://woss.name/2007/02/01/display-svn-changelog-on-svn-up/
+		# I have slightly modified it to better suit my needs.
+		
+		old_revision=`${SVN} info "$@" | awk '/^Revision:/ {print $2}'`
+		first_update=$((${old_revision} + 1))
+		
+		${SVN} ${operation} "$@"
+		
+		new_revision=`${SVN} info "$@" | awk '/^Revision:/ {print $2}'`
 
-		# Adding/moving/deleting files. These dont need a pager
-		rm|remove|del|delete|add|mv|move|rename|ren|mkdir) $svn $@ | sed "$file_pattern" ;;
+		if [ ${new_revision} -gt ${old_revision} ]; then
+			svn log -v -rHEAD:${first_update} "$@"
+		else
+			echo "No changes."
+		fi
 
-		# blame
-		blame) $svn blame $@ | sed "$blame_pattern" | pager ;;
-		*) $svn $@ ;;
-	esac
-fi
+		echo "State of working tree:"
+		svn status "$@"
+	;;
+	"log")
+		${SVN} ${operation} "$@"|sed -e 's/^-\+$/[33m\0[m/' -e 's/^r\([0-9]\+\) | \([^|]\+\) | \([^|]\+\) | \(.\+\)$/[33m'\
+'Revision: \1\n'\
+'Author:   \2\n'\
+'Time:     \3\n'\
+'Changed:  \4[m/'
+	;;
+	"blame"|"praise"|"annotate"|"ann")
+		${SVN} ${operation} "$@"|sed -e 's/^\(\s*[0-9]\+\s*\)\([^ ]\+\s*\)\(.*\)$/[1;32m\1[m[1;31m\2[m\3/'
+	;;
+	*)
+		${SVN} ${operation} "$@"
+	;;
+esac
