@@ -2,7 +2,7 @@
 
 database=$1
 user=$2
-file=$database.`date +%Y-%m-%d`.sql.gz
+file=$database.`hostname`.`date +%Y-%m-%d`.sql.gz
 count=0
 while [[ -e $file ]] ; do
 	count=$(( $count + 1 ))
