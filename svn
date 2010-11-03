@@ -5,6 +5,21 @@
 SVN="/usr/bin/svn"
 
 operation=$1
+wrap=0
+if [[ -t 1 ]] ; then
+	wrap=1
+fi
+
+case "${operation}" in
+	"--no-wrap") wrap=0; shift; operation=$1 ;;
+	"--wrap") wrap=1; shift; operation=$1 ;;
+esac
+
+if [[ "$wrap" -eq 0 ]] ; then
+	${SVN} "$@"
+	exit $?
+fi
+
 shift
 
 cClear='[0m'
@@ -57,11 +72,11 @@ case "${operation}" in
 		svn status "$@"
 	;;
 	"log")
-		${SVN} ${operation} "$@"|sed -e 's/^-\+$/'${cGraphic}'\0'${cClear}/ -e 's/^r\([0-9]\+\) | \([^|]\+\) | \([^|]\+\) | \(.\+\)$/'\
+		${SVN} ${operation} -v "$@" | sed -e 's/^-\+$/'${cGraphic}'\0'${cClear}/ -e 's/^r\([0-9]\+\) | \([^|]\+\) | \([^|]\+\) | \(.\+\)$/'\
 "${cTitle}Revision:${cDetail} \1\n"\
 "${cTitle}Author:${cDetail}   \2\n"\
 "${cTitle}Time:${cDetail}     \3\n"\
-"${cTitle}Changed:${cDetail}  \4[m/"
+"${cTitle}Changed:${cDetail}  \4[m/" | pager
 	;;
 	"blame"|"praise"|"annotate"|"ann")
 		${SVN} ${operation} "$@" | sed -e 's/^\(\s*[0-9]\+\s*\)\([^ ]\+\s\)\(\s*.*\)$/'"${cTitle}\1${cDetail}\2${cGraphic}|${cClear}\t\3/" | pager
