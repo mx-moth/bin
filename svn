@@ -26,6 +26,7 @@ cClear='[0m'
 cTitle=$cClear'[33m'
 cDetail=$cClear'[1m'
 cGraphic=$cClear'[1;33m'
+cLineNumber=$cClear'[1;33m'
 
 case "${operation}" in
 	"status"|"stat"|"st")
@@ -79,7 +80,7 @@ case "${operation}" in
 "${cTitle}Changed:${cDetail}  \4[m/" | pager
 	;;
 	"blame"|"praise"|"annotate"|"ann")
-		${SVN} ${operation} "$@" | sed -e 's/^\(\s*[0-9]\+\s*\)\([^ ]\+\s\)\(\s*.*\)$/'"${cTitle}\1${cDetail}\2${cGraphic}|${cClear}\t\3/" | pager
+		${SVN} ${operation} "$@" | sed = | sed 'N;s/\n/\t/' | sed -e 's/^\(\s*[0-9]\+\s*\) \([0-9]\+\s*\)\([^ ]\+\s\)\(\s*.*\)$/'"${cLineNumber}\1${cTitle}r\2${cDetail}\3${cGraphic}|${cClear}\t\4/" | pager
 	;;
 	*)
 		${SVN} ${operation} "$@"
