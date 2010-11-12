@@ -1,7 +1,11 @@
 #!/bin/bash
 
 database=$1
-user=$2
+if [[ $# -lt 2 ]] ; then
+	user=$USER
+else
+	user=$2
+fi
 file=$database.`hostname`.`date +%Y-%m-%d`.sql.gz
 count=0
 while [[ -e $file ]] ; do
