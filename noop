@@ -1,0 +1,17 @@
+#!/bin/bash
+echo -n "noop: Keeping the SSH connection alive. Ctrl+C to quit.  "
+
+i=0
+while [ 1 ] ; do
+	echo -n ""
+	case $i in
+		0) echo -n - ;;
+		1) echo -n \\ ;;
+		2) echo -n '|' ;;
+		3) echo -n / ;;
+	esac
+
+	i=$(( ( $i + 1 ) % 4 ))
+
+	sleep 10
+done
